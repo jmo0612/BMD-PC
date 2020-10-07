@@ -11,4 +11,8 @@ repositories {
 
 dependencies {
     testImplementation     'junit:junit:4.13'
+    implementation project(path: ':JMPCFramework')
+    implementation project(path: ':JMPCFramework:JMJavaFramework')
+    // https://mvnrepository.com/artifact/com.google.zxing/core
+    implementation group: 'com.google.zxing', name: 'core', version: '3.4.0'
 }

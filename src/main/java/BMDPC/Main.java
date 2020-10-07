@@ -5,6 +5,9 @@
  */
 package BMDPC;
 
+import com.thowo.jmjavaframework.JMFunctions;
+import com.thowo.jmpcframework.JMPCFunctions;
+
 /**
  *
  * @author jimi
@@ -16,6 +19,9 @@ public class Main {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        String localeCode="in_ID";
+        JMPCFunctions.init(localeCode);
+        new FormMain().setVisible(true);
     }
     
 }
