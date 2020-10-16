@@ -5,6 +5,8 @@
  */
 package BMDPC;
 
+import com.thowo.jmjavaframework.JMFormatCollection;
+import com.thowo.jmjavaframework.JMFunctions;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -369,6 +371,18 @@ public class AsetDBTool {
         String ret="";
         if(dt!=null){
             ret=new SimpleDateFormat("Y-M-d").format(dt);
+        }
+        return ret;
+    }
+    
+    private String validKodeRek(String kodeRek){
+        String ret="";
+        kodeRek=JMFunctions.removeSpaces(kodeRek);
+        String[] arrKode=JMFormatCollection.strToArray(kodeRek, "[.]");
+        if(arrKode.length==0)return kodeRek;
+        for(String tmp:arrKode){
+            if(!ret.equals(""))ret+=".";
+            ret+=JMFormatCollection.strToInteger(tmp);
         }
         return ret;
     }

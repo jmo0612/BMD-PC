@@ -18,7 +18,7 @@ import java.util.List;
 public class GitIgnoreDBConnection {
     public static JMDBMySQL getMySqlConDB(){
         //return new JMDBMySQL("remotemysql.com","3306","8vbZvACR5B","8vbZvACR5B","N01E4WgIFN");
-        return new JMDBMySQL("192.168.1.30","3306","bmd","admin","puprino4J4");
+        return new JMDBMySQL("192.168.1.26","3306","bmd","admin","puprino4J4");
     }
     public static File getSQLiteConDB(){
         //return new File("SQLITE_FILE_PATH");
