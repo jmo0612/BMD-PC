@@ -11,6 +11,7 @@ import com.thowo.jmjavaframework.JMFunctions;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -39,16 +40,16 @@ public class DBToolKibF {
     private Double nilai_kontrak=0.0;
     private String ket="";
     
-    public static DBToolKibF createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String bangunan_P_SP_D, String bertingkat, String beton, String luas, String letak, String tgl_dok, String no_dok, String tgl_mulai, String status, String no_kd_tanah, String asal, String nilai_kontrak, String ket, Double multiplyHarga,String dupAdder){
-        return new DBToolKibF(kd_lokasi, kd_barang, kd_reg, jenis, bangunan_P_SP_D, bertingkat, beton, luas, letak, tgl_dok, no_dok, tgl_mulai, status, no_kd_tanah, asal, nilai_kontrak, ket, multiplyHarga,dupAdder);
+    public static DBToolKibF createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String bangunan_P_SP_D, String bertingkat, String beton, String luas, String letak, String tgl_dok, String no_dok, String tgl_mulai, String status, String no_kd_tanah, String asal, String nilai_kontrak, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibF(kd_lokasi, kd_barang, kd_reg, jenis, bangunan_P_SP_D, bertingkat, beton, luas, letak, tgl_dok, no_dok, tgl_mulai, status, no_kd_tanah, asal, nilai_kontrak, ket, multiplyHarga,dupAdder,kodeLokNoZeroIndices);
     }
-    public static DBToolKibF createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String bangunan_P_SP_D, String bertingkat, String beton, String luas, String letak, String tgl_dok, String no_dok, String tgl_mulai, String status, String no_kd_tanah, String asal, String nilai_kontrak, String ket,String dupAdder){
-        return new DBToolKibF(kd_lokasi, kd_barang, kd_reg, jenis, bangunan_P_SP_D, bertingkat, beton, luas, letak, tgl_dok, no_dok, tgl_mulai, status, no_kd_tanah, asal, nilai_kontrak, ket,1.0,dupAdder);
+    public static DBToolKibF createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String bangunan_P_SP_D, String bertingkat, String beton, String luas, String letak, String tgl_dok, String no_dok, String tgl_mulai, String status, String no_kd_tanah, String asal, String nilai_kontrak, String ket,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibF(kd_lokasi, kd_barang, kd_reg, jenis, bangunan_P_SP_D, bertingkat, beton, luas, letak, tgl_dok, no_dok, tgl_mulai, status, no_kd_tanah, asal, nilai_kontrak, ket,1.0,dupAdder,kodeLokNoZeroIndices);
     }
-    public DBToolKibF(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String bangunan_P_SP_D, String bertingkat, String beton, String luas, String letak, String tgl_dok, String no_dok, String tgl_mulai, String status, String no_kd_tanah, String asal, String nilai_kontrak, String ket, Double multiplyHarga,String dupAdder){
-        String lok=this.validKodeRek(kd_lokasi);
-        String brg=this.validKodeRek(kd_barang);
-        String reg=this.validKodeRek(kd_reg);
+    public DBToolKibF(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String bangunan_P_SP_D, String bertingkat, String beton, String luas, String letak, String tgl_dok, String no_dok, String tgl_mulai, String status, String no_kd_tanah, String asal, String nilai_kontrak, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        String lok=DBToolInventaris.validKodeRek(kd_lokasi,kodeLokNoZeroIndices);
+        String brg=DBToolInventaris.validKodeRek(kd_barang,null);
+        String reg=DBToolInventaris.validKodeRek(kd_reg,null);
         this.kd_kib_f=lok+"."+brg+"."+reg+dupAdder;
         this.kd_lokasi=lok;
         this.kd_barang=brg;
@@ -100,15 +101,4 @@ public class DBToolKibF {
         return ret;
     }
     
-    private String validKodeRek(String kodeRek){
-        String ret="";
-        kodeRek=JMFunctions.removeSpaces(kodeRek);
-        String[] arrKode=JMFormatCollection.strToArray(kodeRek, "[.]");
-        if(arrKode.length==0)return kodeRek;
-        for(String tmp:arrKode){
-            if(!ret.equals(""))ret+=".";
-            ret+=JMFormatCollection.strToInteger(tmp);
-        }
-        return ret;
-    }
 }

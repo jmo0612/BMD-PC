@@ -77,17 +77,22 @@ public class FormMain extends JMPCForm {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         //JMFunctions.trace(JMFunctions.getCurrentConnection().queryMySQL("select * from tb_pemegang", false).getString(0));
+        String mapLok="";
+        String mapRek="";
         String fileA="/home/jimi/Desktop/kib_simda/kib a.xls";
         String fileB="/home/jimi/Desktop/kib_simda/kib b.xls";
         String fileC="/home/jimi/Desktop/kib_simda/kib c.xls";
         String fileD="/home/jimi/Desktop/kib_simda/kib d.xls";
         //String fileE="/home/jimi/Desktop/kib_simda/kib e.xls";
-        String fileE="";
+        String fileE="$EMPTY";
         String fileF="/home/jimi/Desktop/kib_simda/kib f.xls";
         //String fileL="/home/jimi/Desktop/kib_simda/kib l.xls";
-        String fileL="";
+        String fileL="$EMPTY";
         String fileInventaris="/home/jimi/Desktop/kib_simda/buku inventaris.xls";
-        SimdaFromExcel.create(fileA, fileB, fileC, fileD, fileE, fileF, fileL,fileInventaris);
+        DoubleInterface[] dblInterfaces={new DoubleFormCaller(),new ManualFormCaller()};
+        SimdaFromExcel.create(dblInterfaces,mapLok,mapRek,fileA, fileB, fileC, fileD, fileE, fileF, fileL,fileInventaris);
+        //new FormDouble(null,true).setVisible(true);
+        //JMFunctions.trace("wkwkwkwkwkwkw");
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**

@@ -11,6 +11,7 @@ import com.thowo.jmjavaframework.JMFunctions;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -39,16 +40,16 @@ public class DBToolKibC {
     private Double harga=0.0;
     private String ket="";
     
-    public static DBToolKibC createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String kondisi, String bertingkat, String beton, String luas_lantai, String letak, String tgl_dok, String no_dok, String luas, String status, String no_kd_tanah, String asal, String harga, String ket, Double multiplyHarga,String dupAdder){
-        return new DBToolKibC(kd_lokasi, kd_barang, kd_reg, jenis, kondisi, bertingkat, beton, luas_lantai, letak, tgl_dok, no_dok, luas, status, no_kd_tanah, asal, harga, ket, multiplyHarga,dupAdder);
+    public static DBToolKibC createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String kondisi, String bertingkat, String beton, String luas_lantai, String letak, String tgl_dok, String no_dok, String luas, String status, String no_kd_tanah, String asal, String harga, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibC(kd_lokasi, kd_barang, kd_reg, jenis, kondisi, bertingkat, beton, luas_lantai, letak, tgl_dok, no_dok, luas, status, no_kd_tanah, asal, harga, ket, multiplyHarga,dupAdder,kodeLokNoZeroIndices);
     }
-    public static DBToolKibC createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String kondisi, String bertingkat, String beton, String luas_lantai, String letak, String tgl_dok, String no_dok, String luas, String status, String no_kd_tanah, String asal, String harga, String ket,String dupAdder){
-        return new DBToolKibC(kd_lokasi, kd_barang, kd_reg, jenis, kondisi, bertingkat, beton, luas_lantai, letak, tgl_dok, no_dok, luas, status, no_kd_tanah, asal, harga, ket,1.0,dupAdder);
+    public static DBToolKibC createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String kondisi, String bertingkat, String beton, String luas_lantai, String letak, String tgl_dok, String no_dok, String luas, String status, String no_kd_tanah, String asal, String harga, String ket,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibC(kd_lokasi, kd_barang, kd_reg, jenis, kondisi, bertingkat, beton, luas_lantai, letak, tgl_dok, no_dok, luas, status, no_kd_tanah, asal, harga, ket,1.0,dupAdder,kodeLokNoZeroIndices);
     }
-    public DBToolKibC(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String kondisi, String bertingkat, String beton, String luas_lantai, String letak, String tgl_dok, String no_dok, String luas, String status, String no_kd_tanah, String asal, String harga, String ket, Double multiplyHarga,String dupAdder){
-        String lok=this.validKodeRek(kd_lokasi);
-        String brg=this.validKodeRek(kd_barang);
-        String reg=this.validKodeRek(kd_reg);
+    public DBToolKibC(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String kondisi, String bertingkat, String beton, String luas_lantai, String letak, String tgl_dok, String no_dok, String luas, String status, String no_kd_tanah, String asal, String harga, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        String lok=DBToolInventaris.validKodeRek(kd_lokasi,kodeLokNoZeroIndices);
+        String brg=DBToolInventaris.validKodeRek(kd_barang,null);
+        String reg=DBToolInventaris.validKodeRek(kd_reg,null);
         this.kd_kib_c=lok+"."+brg+"."+reg+dupAdder;
         this.kd_lokasi=lok;
         this.kd_barang=brg;
@@ -100,15 +101,4 @@ public class DBToolKibC {
         return ret;
     }
     
-    private String validKodeRek(String kodeRek){
-        String ret="";
-        kodeRek=JMFunctions.removeSpaces(kodeRek);
-        String[] arrKode=JMFormatCollection.strToArray(kodeRek, "[.]");
-        if(arrKode.length==0)return kodeRek;
-        for(String tmp:arrKode){
-            if(!ret.equals(""))ret+=".";
-            ret+=JMFormatCollection.strToInteger(tmp);
-        }
-        return ret;
-    }
 }

@@ -8,7 +8,10 @@ package BMDPC;
 import com.thowo.jmjavaframework.JMDate;
 import com.thowo.jmjavaframework.JMFormatCollection;
 import com.thowo.jmjavaframework.JMFunctions;
+import com.thowo.jmjavaframework.db.JMResultSet;
 import com.thowo.jmjavaframework.report.JMExcel;
+import com.thowo.jmjavaframework.table.JMRow;
+import com.thowo.jmjavaframework.table.JMTable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,6 +33,10 @@ import java.util.logging.Logger;
  */
 public class SimdaFromExcel {
     //private List<AsetDBTool> asets;
+    private DoubleInterface[] dblInterfaces;
+    
+    private String mapLok;
+    private String mapRek;
     private List<DBToolKibA> kibA;
     private List<DBToolKibB> kibB;
     private List<DBToolKibC> kibC;
@@ -40,13 +47,19 @@ public class SimdaFromExcel {
     private List<DBToolInventaris> inventaris;
     private int dup=0;
     
-    public static SimdaFromExcel create(String fileA, String fileB, String fileC, String fileD, String fileE, String fileF, String fileL, String fileInventaris){
-        return new SimdaFromExcel(fileA, fileB, fileC, fileD, fileE, fileF, fileL, fileInventaris);
+    private JMTable tMapLok=null;
+    private JMTable tMapRek=null;
+    
+    public static SimdaFromExcel create(DoubleInterface[] dblInterfaces,String mapLok, String mapRek,String fileA, String fileB, String fileC, String fileD, String fileE, String fileF, String fileL, String fileInventaris){
+        return new SimdaFromExcel(dblInterfaces,mapLok,mapRek,fileA, fileB, fileC, fileD, fileE, fileF, fileL, fileInventaris);
     }
     
-    public SimdaFromExcel(String fileA, String fileB, String fileC, String fileD, String fileE, String fileF, String fileL, String fileInventaris){
+    public SimdaFromExcel(DoubleInterface[] dblInterfaces,String mapLok, String mapRek,String fileA, String fileB, String fileC, String fileD, String fileE, String fileF, String fileL, String fileInventaris){
         //this.asets=new ArrayList();
-        
+        boolean completed=true;
+        this.dblInterfaces=dblInterfaces;
+        this.mapLok=mapLok;
+        this.mapRek=mapRek;
         this.kibA=new ArrayList();
         this.kibB=new ArrayList();
         this.kibC=new ArrayList();
@@ -56,17 +69,50 @@ public class SimdaFromExcel {
         this.kibLainnya=new ArrayList();
         this.inventaris=new ArrayList();
         
-        if(!fileA.equals(""))prosesA(fileA);
-        if(!fileB.equals(""))prosesB(fileB);
-        if(!fileC.equals(""))prosesC(fileC);
-        if(!fileD.equals(""))prosesD(fileD);
-        if(!fileE.equals(""))prosesE(fileE);
-        if(!fileF.equals(""))prosesF(fileF);
-        if(!fileL.equals(""))prosesL(fileL);
-        if(!fileInventaris.equals(""))prosesInventaris(fileInventaris);
+        if(!mapLok.equals("")){
+            this.fillMapLok();
+        }
+        if(!mapRek.equals("")){
+           this.fillMapRek();
+        }
+        this.tMapLok=JMTable.create("select * from tb_map_rek_lok", JMTable.DBTYPE_MYSQL);
+        this.tMapLok.addKeyColumn(0);
+        this.tMapRek=JMTable.create("select * from tb_map_rek_barang", JMTable.DBTYPE_MYSQL);
+        this.tMapRek.addKeyColumn(0);
+        if(!fileA.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_a where manual='0'", false);
+            if(!fileA.equals("$EMPTY"))prosesA(fileA);
+        }
+        if(!fileB.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_b where manual='0'", false);
+            if(!fileB.equals("$EMPTY"))prosesB(fileB);
+        }
+        if(!fileC.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_c where manual='0'", false);
+            if(!fileC.equals("$EMPTY"))prosesC(fileC);
+        }
+        if(!fileD.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_d where manual='0'", false);
+            if(!fileD.equals("$EMPTY"))prosesD(fileD);
+        }
+        if(!fileE.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_e where manual='0'", false);
+            if(!fileE.equals("$EMPTY"))prosesE(fileE);
+        }
+        if(!fileF.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_f where manual='0'", false);
+            if(!fileF.equals("$EMPTY"))prosesF(fileF);
+        }
+        if(!fileL.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_lainnya where manual='0'", false);
+            if(!fileL.equals("$EMPTY"))prosesL(fileL);
+        }
+        if(!fileInventaris.equals("")){
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_inventaris where manual='0'", false);
+            prosesInventaris(fileInventaris);
+        }
         
         if(this.kibA.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_a", false);
             String q="";
             for(DBToolKibA aset:this.kibA){
                 if(q.equals("")){
@@ -76,11 +122,12 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            //JMFunctions.trace(q);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            
         }
         
         if(this.kibB.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_b", false);
             String q="";
             for(DBToolKibB aset:this.kibB){
                 if(q.equals("")){
@@ -90,12 +137,10 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.trace("insert into "+q);
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
         }
         
         if(this.kibC.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_c", false);
             String q="";
             for(DBToolKibC aset:this.kibC){
                 if(q.equals("")){
@@ -105,11 +150,10 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
         }
         
         if(this.kibD.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_d", false);
             String q="";
             for(DBToolKibD aset:this.kibD){
                 if(q.equals("")){
@@ -119,11 +163,10 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
         }
         
         if(this.kibE.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_e", false);
             String q="";
             for(DBToolKibE aset:this.kibE){
                 if(q.equals("")){
@@ -133,11 +176,10 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
         }
         
         if(this.kibF.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_f", false);
             String q="";
             for(DBToolKibF aset:this.kibF){
                 if(q.equals("")){
@@ -147,11 +189,10 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
         }
         
         if(this.kibLainnya.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_lainnya", false);
             String q="";
             for(DBToolKibLainnya aset:this.kibLainnya){
                 if(q.equals("")){
@@ -161,11 +202,10 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
         }
         
         if(this.inventaris.size()!=0){
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_xls_inventaris", false);
             String q="";
             for(DBToolInventaris aset:this.inventaris){
                 if(q.equals("")){
@@ -175,22 +215,122 @@ public class SimdaFromExcel {
                     q+=aset.getQueryValues();
                 }
             }
-            JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("insert into "+q, false);
+            if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL("update tb_inventaris "
+                    + "set "
+                    + "kd_xls_inventaris='', "
+                    + "kd_xls_kib_a='', "
+                    + "kd_xls_kib_b='', "
+                    + "kd_xls_kib_c='', "
+                    + "kd_xls_kib_d='', "
+                    + "kd_xls_kib_e='', "
+                    + "kd_xls_kib_f='', "
+                    + "kd_xls_kib_lainnya=''"
+                    + " where manual='0'"
+                    , false);
+            
+            q=QueryHelper.q01NoDouble();
+            if(!q.equals(""))if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL(q, false);
+            
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_inventaris");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_a");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_b");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_c");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_d");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_e");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_f");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_lainnya");
+            
+            q=QueryHelper.q05NewInvUpdate();
+            if(!q.equals(""))if(completed)completed=JMFunctions.getCurrentConnection().queryUpdateMySQL(q, false);
+            
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_inventaris");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_a");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_b");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_c");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_d");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_e");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_f");
+            if(completed)completed=dblInterfaces[0].getSync("tb_xls_lainnya");
+            
+            if(completed)completed=dblInterfaces[1].getSync("");
+            
+            if(!completed){
+                JMFunctions.traceAndShow("Update failed. Please try again");
+            }
         }
         JMFunctions.trace("SELESAI");
     }
     
+    private void fillMapLok(){
+        if(this.mapLok.equals(""))return;
+        JMExcel xls=JMExcel.create(this.mapLok).setSheet(0);
+        String q="";
+        while(xls.rowNotNull()){
+            if(xls.getCurrentRowNum()==0)xls.nextRow();
+            String vals="";
+            while(xls.cellNotNull()){
+                if(xls.getCurrentCellNum()==0){
+                    vals="('"+xls.getString()+"'";
+                }else{
+                    vals+=",'"+xls.getString()+"'";
+                }
+                xls.nextCell();
+            }
+            if(!vals.equals(""))vals+=")";
+            if(q.equals("")){
+                q=vals;
+            }else{
+                q+=","+vals;
+            }
+            xls.nextRow();
+        }
+        if(q.equals(""))return;
+        JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_map_rek_lok", false);
+        q="insert into tb_map_rek_lok(rek_lok_xls,rek_lok_app) values"+q;
+        JMFunctions.getCurrentConnection().queryUpdateMySQL(q, false);
+    }
+    private void fillMapRek(){
+        if(this.mapRek.equals(""))return;
+        JMExcel xls=JMExcel.create(this.mapRek).setSheet(0);
+        String q="";
+        while(xls.rowNotNull()){
+            if(xls.getCurrentRowNum()==0)xls.nextRow();
+            String vals="";
+            while(xls.cellNotNull()){
+                if(xls.getCurrentCellNum()==0){
+                    vals="('"+xls.getString()+"'";
+                }else{
+                    vals+=",'"+xls.getString()+"'";
+                }
+                xls.nextCell();
+            }
+            if(!vals.equals(""))vals+=")";
+            if(q.equals("")){
+                q=vals;
+            }else{
+                q+=","+vals;
+            }
+            xls.nextRow();
+        }
+        if(q.equals(""))return;
+        JMFunctions.getCurrentConnection().queryUpdateMySQL("delete from tb_map_rek_barang", false);
+        q="insert into tb_map_rek_barang(rek_barang_xls,rek_barang_app) values"+q;
+        JMFunctions.getCurrentConnection().queryUpdateMySQL(q, false);
+    }
     
     private void prosesA(String fileXls){
         Integer totalDataCol=14;
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=3;
         Integer hargaColIndex=12;
         Double multiplyHarga=1000.0;
-        proses("A",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("A",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesB(String fileXls){
@@ -198,11 +338,13 @@ public class SimdaFromExcel {
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=3;
         Integer hargaColIndex=14;
         Double multiplyHarga=1000.0;
-        proses("B",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("B",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesC(String fileXls){
@@ -210,23 +352,27 @@ public class SimdaFromExcel {
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=3;
         Integer hargaColIndex=15;
         Double multiplyHarga=1000.0;
-        proses("C",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("C",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesD(String fileXls){
         Integer totalDataCol=17;
         String kodeLokSign="NO. KODE LOKASI";
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=3;
         Integer hargaColIndex=14;
         Double multiplyHarga=1000.0;
-        proses("D",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("D",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesE(String fileXls){
@@ -234,11 +380,13 @@ public class SimdaFromExcel {
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=3;
         Integer hargaColIndex=14;
         Double multiplyHarga=1000.0;
-        proses("E",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("E",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesF(String fileXls){
@@ -246,11 +394,13 @@ public class SimdaFromExcel {
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=-1;
         Integer hargaColIndex=13;
         Double multiplyHarga=1000.0;
-        proses("F",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("F",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesL(String fileXls){
@@ -258,11 +408,13 @@ public class SimdaFromExcel {
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah Harga";
         Integer kodeLokasiDataStepFromSign=2;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=3;
         Integer hargaColIndex=10;
         Double multiplyHarga=1000.0;
-        proses("L",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("L",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
     private void prosesInventaris(String fileXls){
@@ -270,14 +422,16 @@ public class SimdaFromExcel {
         String kodeLokSign="NO. KODE LOKASI";
         String endOfDataSign="Jumlah";
         Integer kodeLokasiDataStepFromSign=0;
+        List<Integer> kodeLokNoZeroIndex=new ArrayList();
+        kodeLokNoZeroIndex.add(7);
         Integer dataBeginStepFromSign=3;
         Integer regColIndex=2;
         Integer hargaColIndex=13;
         Double multiplyHarga=1.0;
-        proses("Inventaris",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga);
+        proses("Inventaris",fileXls,regColIndex, totalDataCol, kodeLokSign, endOfDataSign, kodeLokasiDataStepFromSign, dataBeginStepFromSign,hargaColIndex,multiplyHarga,kodeLokNoZeroIndex);
     }
     
-    private void proses(String kib, String fileXls, Integer regColIndex, Integer totalDataCol, String kodeLokSign, String endOfDataSign, Integer kodeLokasiDataStepFromSign, Integer dataBeginStepFromSign,Integer hargaColIndex,Double multiplyHarga){
+    private void proses(String kib, String fileXls, Integer regColIndex, Integer totalDataCol, String kodeLokSign, String endOfDataSign, Integer kodeLokasiDataStepFromSign, Integer dataBeginStepFromSign,Integer hargaColIndex,Double multiplyHarga, List<Integer> kodeLokNoZeroIndex){
         JMExcel xls=JMExcel.create(fileXls).setSheet(0);
         List<List<String>> dataA=new ArrayList();
         boolean findData=false;
@@ -387,9 +541,21 @@ public class SimdaFromExcel {
         }
         for(List<String> myData:dataA){
             String dupAdder="";
+            List<String> keys=new ArrayList();
+            JMRow tmp=null;
             switch(kib){
                 case "A":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), doubleFromString(myData.get(5)), intFromString(myData.get(6)), myData.get(7), myData.get(8), dateFromString(myData.get(9)), myData.get(10), myData.get(11), myData.get(12), doubleFromString(myData.get(13)), myData.get(14)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(3));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(3, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderA(myData.get(0), myData.get(3), myData.get(4));
                     this.kibA.add(DBToolKibA.createKIB(
                             myData.get(0), 
@@ -407,11 +573,21 @@ public class SimdaFromExcel {
                             myData.get(13), 
                             myData.get(14),
                             multiplyHarga,
-                            dupAdder)
+                            dupAdder,kodeLokNoZeroIndex)
                     );
                     break;
                 case "B":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), myData.get(5), myData.get(6), myData.get(7), intFromString(myData.get(8)), myData.get(9), myData.get(10), myData.get(11), myData.get(12), myData.get(13), myData.get(14), doubleFromString(myData.get(15)), myData.get(16)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(2));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(2, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderB(myData.get(0), myData.get(2), myData.get(4));
                     this.kibB.add(
                             DBToolKibB.createKIB( 
@@ -432,12 +608,22 @@ public class SimdaFromExcel {
                                     myData.get(15), 
                                     myData.get(16),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;
                 case "C":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), myData.get(5), booleanFromString(myData.get(6)), booleanFromString(myData.get(7)), doubleFromString(myData.get(8)), myData.get(9), dateFromString(myData.get(10)), myData.get(11), doubleFromString(myData.get(12)), myData.get(13), myData.get(14), myData.get(15), doubleFromString(myData.get(16)), myData.get(17)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(3));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(3, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderC(myData.get(0), myData.get(3), myData.get(4));
                     this.kibC.add(
                             DBToolKibC.createKIB(
@@ -459,12 +645,22 @@ public class SimdaFromExcel {
                                     myData.get(16), 
                                     myData.get(17),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;
                 case "D":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), myData.get(5), doubleFromString(myData.get(6)), doubleFromString(myData.get(7)), doubleFromString(myData.get(8)), myData.get(9), dateFromString(myData.get(10)), myData.get(11), myData.get(12), myData.get(13), myData.get(14), doubleFromString(myData.get(15)), myData.get(16), myData.get(17)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(3));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(3, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderD(myData.get(0), myData.get(3), myData.get(4));
                     this.kibD.add(
                             DBToolKibD.createKIB(
@@ -486,12 +682,22 @@ public class SimdaFromExcel {
                                     myData.get(16), 
                                     myData.get(17),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;
                 case "E":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), myData.get(5), myData.get(6), myData.get(7), myData.get(8), myData.get(9), myData.get(10), myData.get(11), doubleFromString(myData.get(12)), intFromString(myData.get(13)), doubleFromString(myData.get(14)), myData.get(15)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(3));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(3, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderE(myData.get(0), myData.get(3), myData.get(4));
                     this.kibE.add(
                             DBToolKibE.createKIB(
@@ -512,12 +718,17 @@ public class SimdaFromExcel {
                                     myData.get(15),
                                     myData.get(16),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;
                 case "F":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), booleanFromString(myData.get(4)), booleanFromString(myData.get(5)), doubleFromString(myData.get(6)), myData.get(7), dateFromString(myData.get(8)), myData.get(9), dateFromString(myData.get(10)), myData.get(11), myData.get(12), myData.get(13), doubleFromString(myData.get(14)), myData.get(15)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderF(myData.get(0), String.valueOf(JMFormatCollection.strToInteger(myData.get(1))), String.valueOf(JMFormatCollection.strToInteger(myData.get(1))));
                     this.kibF.add(
                             DBToolKibF.createKIB(
@@ -539,12 +750,22 @@ public class SimdaFromExcel {
                                     myData.get(14), 
                                     myData.get(15),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;
                 case "L":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), intFromString(myData.get(5)), myData.get(6), myData.get(7), myData.get(8), myData.get(9), myData.get(10), doubleFromString(myData.get(11)), myData.get(12)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(3));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(3, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderLainnya(myData.get(0), myData.get(3), myData.get(4));
                     this.kibLainnya.add(
                             DBToolKibLainnya.createKIB(
@@ -561,12 +782,22 @@ public class SimdaFromExcel {
                                     myData.get(11), 
                                     myData.get(12),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;
                 case "Inventaris":
                     //this.asets.add(new AsetDBTool(myData.get(0), intFromString(myData.get(1)), myData.get(2), myData.get(3), myData.get(4), intFromString(myData.get(5)), myData.get(6), myData.get(7), myData.get(8), myData.get(9), myData.get(10), doubleFromString(myData.get(11)), myData.get(12)));
+                    keys=new ArrayList();
+                    keys.add(myData.get(0));
+                    tmp=this.tMapLok.findByKeys(keys);
+                    if(tmp!=null)myData.set(0, tmp.getCells().get(1).getValueString());
+                    
+                    keys=new ArrayList();
+                    keys.add(myData.get(2));
+                    tmp=this.tMapRek.findByKeys(keys);
+                    if(tmp!=null)myData.set(2, tmp.getCells().get(1).getValueString());
+                    
                     dupAdder=this.dupAdderInventaris(myData.get(0), myData.get(2), myData.get(3));
                     this.inventaris.add(
                             DBToolInventaris.createKIB(
@@ -586,7 +817,7 @@ public class SimdaFromExcel {
                                     myData.get(14), 
                                     myData.get(15),
                                     multiplyHarga,
-                                    dupAdder
+                                    dupAdder,kodeLokNoZeroIndex
                             )
                     );
                     break;

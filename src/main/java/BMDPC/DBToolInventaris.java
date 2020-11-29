@@ -11,6 +11,7 @@ import com.thowo.jmjavaframework.JMFunctions;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -37,16 +38,16 @@ public class DBToolInventaris {
     private Double harga=0.0;
     private String ket="";
     
-    public static DBToolInventaris createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String merk, String no_SPCM, String bahan, String asal, String tahun, String ukuran, String satuan, String keadaan, String jumlah, String harga, String ket, Double multiplyHarga,String dupAdder){
-        return new DBToolInventaris(kd_lokasi, kd_barang, kd_reg, jenis, merk, no_SPCM, bahan, asal, tahun, ukuran, satuan, keadaan, jumlah, harga, ket, multiplyHarga,dupAdder);
+    public static DBToolInventaris createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String merk, String no_SPCM, String bahan, String asal, String tahun, String ukuran, String satuan, String keadaan, String jumlah, String harga, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolInventaris(kd_lokasi, kd_barang, kd_reg, jenis, merk, no_SPCM, bahan, asal, tahun, ukuran, satuan, keadaan, jumlah, harga, ket, multiplyHarga,dupAdder,kodeLokNoZeroIndices);
     }
-    public static DBToolInventaris createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String merk, String no_SPCM, String bahan, String asal, String tahun, String ukuran, String satuan, String keadaan, String jumlah, String harga, String ket,String dupAdder){
-        return new DBToolInventaris(kd_lokasi, kd_barang, kd_reg, jenis, merk, no_SPCM, bahan, asal, tahun, ukuran, satuan, keadaan, jumlah, harga, ket,1.0,dupAdder);
+    public static DBToolInventaris createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String merk, String no_SPCM, String bahan, String asal, String tahun, String ukuran, String satuan, String keadaan, String jumlah, String harga, String ket,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolInventaris(kd_lokasi, kd_barang, kd_reg, jenis, merk, no_SPCM, bahan, asal, tahun, ukuran, satuan, keadaan, jumlah, harga, ket,1.0,dupAdder,kodeLokNoZeroIndices);
     }
-    public DBToolInventaris(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String merk, String no_SPCM, String bahan, String asal, String tahun, String ukuran, String satuan, String keadaan, String jumlah, String harga, String ket, Double multiplyHarga,String dupAdder){
-        String lok=this.validKodeRek(kd_lokasi);
-        String brg=this.validKodeRek(kd_barang);
-        String reg=this.validKodeRek(kd_reg);
+    public DBToolInventaris(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String merk, String no_SPCM, String bahan, String asal, String tahun, String ukuran, String satuan, String keadaan, String jumlah, String harga, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        String lok=this.validKodeRek(kd_lokasi,kodeLokNoZeroIndices);
+        String brg=this.validKodeRek(kd_barang,null);
+        String reg=this.validKodeRek(kd_reg,null);
         this.kd_inventaris=lok+"."+brg+"."+reg+dupAdder;
         this.kd_lokasi=lok;
         this.kd_barang=brg;
@@ -94,14 +95,27 @@ public class DBToolInventaris {
         return ret;
     }
     
-    private String validKodeRek(String kodeRek){
+    public static String validKodeRek(String kodeRek, List<Integer> noZeroIndices){
         String ret="";
         kodeRek=JMFunctions.removeSpaces(kodeRek);
         String[] arrKode=JMFormatCollection.strToArray(kodeRek, "[.]");
         if(arrKode.length==0)return kodeRek;
+        int arrInd=0;
         for(String tmp:arrKode){
             if(!ret.equals(""))ret+=".";
-            ret+=JMFormatCollection.strToInteger(tmp);
+            int ii=JMFormatCollection.strToInteger(tmp);
+            boolean found=false;
+            if(noZeroIndices!=null){
+                for(Integer ind:noZeroIndices){
+                    if(ind==arrInd){
+                        found=true;
+                        break;
+                    }
+                }
+            }
+            if(found)if(ii==0)ii=1;
+            ret+=ii;
+            arrInd++;
         }
         return ret;
     }

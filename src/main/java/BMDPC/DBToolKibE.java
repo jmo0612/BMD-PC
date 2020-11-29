@@ -11,6 +11,7 @@ import com.thowo.jmjavaframework.JMFunctions;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -38,16 +39,16 @@ public class DBToolKibE {
     private Double harga=0.0;
     private String ket="";
     
-    public static DBToolKibE createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String judul_pencipta_buku, String spesifikasi_buku, String asal_daerah_seni, String pencipta_seni, String bahan_seni, String jenis_HTT, String ukuran, String jumlah, String asal, String tahun, String harga, String ket, Double multiplyHarga,String dupAdder){
-        return new DBToolKibE(kd_lokasi, kd_barang, kd_reg, jenis, judul_pencipta_buku, spesifikasi_buku, asal_daerah_seni, pencipta_seni, bahan_seni, jenis_HTT, ukuran, jumlah, asal, tahun, harga, ket, multiplyHarga,dupAdder);
+    public static DBToolKibE createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String judul_pencipta_buku, String spesifikasi_buku, String asal_daerah_seni, String pencipta_seni, String bahan_seni, String jenis_HTT, String ukuran, String jumlah, String asal, String tahun, String harga, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibE(kd_lokasi, kd_barang, kd_reg, jenis, judul_pencipta_buku, spesifikasi_buku, asal_daerah_seni, pencipta_seni, bahan_seni, jenis_HTT, ukuran, jumlah, asal, tahun, harga, ket, multiplyHarga,dupAdder,kodeLokNoZeroIndices);
     }
-    public static DBToolKibE createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String judul_pencipta_buku, String spesifikasi_buku, String asal_daerah_seni, String pencipta_seni, String bahan_seni, String jenis_HTT, String ukuran, String jumlah, String asal, String tahun, String harga, String ket,String dupAdder){
-        return new DBToolKibE(kd_lokasi, kd_barang, kd_reg, jenis, judul_pencipta_buku, spesifikasi_buku, asal_daerah_seni, pencipta_seni, bahan_seni, jenis_HTT, ukuran, jumlah, asal, tahun, harga, ket,1.0,dupAdder);
+    public static DBToolKibE createKIB(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String judul_pencipta_buku, String spesifikasi_buku, String asal_daerah_seni, String pencipta_seni, String bahan_seni, String jenis_HTT, String ukuran, String jumlah, String asal, String tahun, String harga, String ket,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibE(kd_lokasi, kd_barang, kd_reg, jenis, judul_pencipta_buku, spesifikasi_buku, asal_daerah_seni, pencipta_seni, bahan_seni, jenis_HTT, ukuran, jumlah, asal, tahun, harga, ket,1.0,dupAdder,kodeLokNoZeroIndices);
     }
-    public DBToolKibE(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String judul_pencipta_buku, String spesifikasi_buku, String asal_daerah_seni, String pencipta_seni, String bahan_seni, String jenis_HTT, String ukuran, String jumlah, String asal, String tahun, String harga, String ket, Double multiplyHarga,String dupAdder){
-        String lok=this.validKodeRek(kd_lokasi);
-        String brg=this.validKodeRek(kd_barang);
-        String reg=this.validKodeRek(kd_reg);
+    public DBToolKibE(String kd_lokasi, String kd_barang, String kd_reg, String jenis, String judul_pencipta_buku, String spesifikasi_buku, String asal_daerah_seni, String pencipta_seni, String bahan_seni, String jenis_HTT, String ukuran, String jumlah, String asal, String tahun, String harga, String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        String lok=DBToolInventaris.validKodeRek(kd_lokasi,kodeLokNoZeroIndices);
+        String brg=DBToolInventaris.validKodeRek(kd_barang,null);
+        String reg=DBToolInventaris.validKodeRek(kd_reg,null);
         this.kd_kib_e=lok+"."+brg+"."+reg+dupAdder;
         this.kd_lokasi=lok;
         this.kd_barang=brg;
@@ -97,15 +98,4 @@ public class DBToolKibE {
         return ret;
     }
     
-    private String validKodeRek(String kodeRek){
-        String ret="";
-        kodeRek=JMFunctions.removeSpaces(kodeRek);
-        String[] arrKode=JMFormatCollection.strToArray(kodeRek, "[.]");
-        if(arrKode.length==0)return kodeRek;
-        for(String tmp:arrKode){
-            if(!ret.equals(""))ret+=".";
-            ret+=JMFormatCollection.strToInteger(tmp);
-        }
-        return ret;
-    }
 }

@@ -14,6 +14,7 @@ import com.thowo.jmjavaframework.JMFunctions;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,16 +43,16 @@ public class DBToolKibA {
     private Double harga=0.0;
     private String ket="";
     
-    public static DBToolKibA createKIB(String kd_lokasi,String kd_barang,String kd_reg,String jenis,String luas,String tahun,String letak,String hak,String tgl_sertifikat,String no_sertifikat,String penggunaan,String asal,String harga,String ket, Double multiplyHarga,String dupAdder){
-        return new DBToolKibA(kd_lokasi,kd_barang,kd_reg,jenis,luas,tahun,letak,hak,tgl_sertifikat,no_sertifikat,penggunaan,asal,harga,ket,multiplyHarga,dupAdder);
+    public static DBToolKibA createKIB(String kd_lokasi,String kd_barang,String kd_reg,String jenis,String luas,String tahun,String letak,String hak,String tgl_sertifikat,String no_sertifikat,String penggunaan,String asal,String harga,String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibA(kd_lokasi,kd_barang,kd_reg,jenis,luas,tahun,letak,hak,tgl_sertifikat,no_sertifikat,penggunaan,asal,harga,ket,multiplyHarga,dupAdder,kodeLokNoZeroIndices);
     }
-    public static DBToolKibA createKIB(String kd_lokasi,String kd_barang,String kd_reg,String jenis,String luas,String tahun,String letak,String hak,String tgl_sertifikat,String no_sertifikat,String penggunaan,String asal,String harga,String ket,String dupAdder){
-        return new DBToolKibA(kd_lokasi,kd_barang,kd_reg,jenis,luas,tahun,letak,hak,tgl_sertifikat,no_sertifikat,penggunaan,asal,harga,ket,1.0,dupAdder);
+    public static DBToolKibA createKIB(String kd_lokasi,String kd_barang,String kd_reg,String jenis,String luas,String tahun,String letak,String hak,String tgl_sertifikat,String no_sertifikat,String penggunaan,String asal,String harga,String ket,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        return new DBToolKibA(kd_lokasi,kd_barang,kd_reg,jenis,luas,tahun,letak,hak,tgl_sertifikat,no_sertifikat,penggunaan,asal,harga,ket,1.0,dupAdder,kodeLokNoZeroIndices);
     }
-    public DBToolKibA(String kd_lokasi,String kd_barang,String kd_reg,String jenis,String luas,String tahun,String letak,String hak,String tgl_sertifikat,String no_sertifikat,String penggunaan,String asal,String harga,String ket, Double multiplyHarga,String dupAdder){
-        String lok=this.validKodeRek(kd_lokasi);
-        String brg=this.validKodeRek(kd_barang);
-        String reg=this.validKodeRek(kd_reg);
+    public DBToolKibA(String kd_lokasi,String kd_barang,String kd_reg,String jenis,String luas,String tahun,String letak,String hak,String tgl_sertifikat,String no_sertifikat,String penggunaan,String asal,String harga,String ket, Double multiplyHarga,String dupAdder, List<Integer> kodeLokNoZeroIndices){
+        String lok=DBToolInventaris.validKodeRek(kd_lokasi,kodeLokNoZeroIndices);
+        String brg=DBToolInventaris.validKodeRek(kd_barang,null);
+        String reg=DBToolInventaris.validKodeRek(kd_reg,null);
         this.kd_kib_a=lok+"."+brg+"."+reg+dupAdder;
         this.kd_lokasi=lok;
         this.kd_barang=brg;
@@ -99,15 +100,5 @@ public class DBToolKibA {
         return ret;
     }
     
-    private String validKodeRek(String kodeRek){
-        String ret="";
-        kodeRek=JMFunctions.removeSpaces(kodeRek);
-        String[] arrKode=JMFormatCollection.strToArray(kodeRek, "[.]");
-        if(arrKode.length==0)return kodeRek;
-        for(String tmp:arrKode){
-            if(!ret.equals(""))ret+=".";
-            ret+=JMFormatCollection.strToInteger(tmp);
-        }
-        return ret;
-    }
+    
 }
